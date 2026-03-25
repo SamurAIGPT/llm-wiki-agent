@@ -34,8 +34,9 @@ function AgentConvo() {
     const [role2, setRole2] = useState("");
     const [chat,setChat] = useState([])
     const [sessId,setSessId] = useState(0)
-    const [showBanner, setShowBanner] = useState(false);	
+    const [showBanner, setShowBanner] = useState(false);
     const [turn,setTurn] = useState(0)
+    const [provider, setProvider] = useState("openai");
     const sessionRef = useRef(null)
     sessionRef.current = sessId
     const chatRef = useRef(null)
@@ -82,7 +83,7 @@ function AgentConvo() {
     }
 
     const addKey = () => {
-        axios.post("/store_key",{key:key}).then((res)=>{
+        axios.post("/store_key",{key:key,provider:provider}).then((res)=>{
             setKeyAdded(true)
           }).catch((err)=>{
             toast("Key cannot be verified, try again");
@@ -111,6 +112,7 @@ function AgentConvo() {
                 setAuthUrl(res.data.auth_url)
             }else{
                 setUser({id:res.data.userId,image:res.data.image})
+                if(res.data.provider) setProvider(res.data.provider)
                 if(res.data.key_added==null){
                     setKeyAdded((prev)=>false)
                 }else{
@@ -214,8 +216,16 @@ function AgentConvo() {
                                 }
                             </>:
                             <Stack className="align-items-center" gap={3}>
-                                <h6><b>Add your OpenAI Key</b></h6>
-                                <p><small>Get your OpenAI Key by signing up/ logging in from the OpenAI Dashboard. </small><a target="_blank" href="https://platform.openai.com/account/api-keys">Go to Dashboard</a></p>
+                                <h6><b>Add your API Key</b></h6>
+                                <Form.Group className="w-100">
+                                    <Form.Label>LLM Provider</Form.Label>
+                                    <Form.Select className="agent-input" value={provider} onChange={(e)=>{setProvider(e.target.value);setKey("")}}>
+                                        <option value="openai">OpenAI</option>
+                                        <option value="minimax">MiniMax</option>
+                                    </Form.Select>
+                                </Form.Group>
+                                <p><small>{provider==="minimax" ? "Get your MiniMax API Key from the MiniMax platform." : "Get your OpenAI Key by signing up/ logging in from the OpenAI Dashboard."} </small>
+                                {provider==="minimax" ? <a target="_blank" rel="noreferrer" href="https://platform.minimaxi.com/">Go to MiniMax Platform</a> : <a target="_blank" rel="noreferrer" href="https://platform.openai.com/account/api-keys">Go to Dashboard</a>}</p>
                                 <InputGroup >
                                     <FormControl className="chat-input px-md-5 py-md-2 shadow-none"
                                     style={{height:'48px'}}

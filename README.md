@@ -15,6 +15,7 @@ Try it live: [camelagi.thesamur.ai](https://camelagi.thesamur.ai/)
 ## Features
 
 - **Dual Agent System** - Two AI agents collaborate on tasks
+- **Multi-Provider Support** - Works with OpenAI and [MiniMax](https://platform.minimaxi.com/) LLMs
 - **Custom Personas** - Name and configure your own AI characters
 - **Goal-Oriented** - Set any goal and watch agents work together
 - **Real-Time Conversation** - View agent-to-agent communication
@@ -42,7 +43,9 @@ Try it live: [camelagi.thesamur.ai](https://camelagi.thesamur.ai/)
 
 - Python 3.8+
 - Node.js v18+
-- OpenAI API Key
+- API Key from one of the supported providers:
+  - [OpenAI](https://platform.openai.com/account/api-keys)
+  - [MiniMax](https://platform.minimaxi.com/) (models: MiniMax-M2.5, MiniMax-M2.5-highspeed)
 
 ### Installation
 
@@ -56,6 +59,15 @@ cat steps_to_run.md
 ```
 
 See detailed setup: [steps_to_run.md](https://github.com/SamurAIGPT/GPT-Agent/blob/main/steps_to_run.md)
+
+## Supported LLM Providers
+
+| Provider | Models | API Base |
+|----------|--------|----------|
+| OpenAI | gpt-3.5-turbo, gpt-4, gpt-4-turbo | https://api.openai.com/v1 |
+| [MiniMax](https://platform.minimaxi.com/) | MiniMax-M2.5, MiniMax-M2.5-highspeed | https://api.minimax.io/v1 |
+
+Select your preferred provider in the UI when adding your API key. MiniMax uses an OpenAI-compatible API, so no additional dependencies are required.
 
 ## Architecture
 

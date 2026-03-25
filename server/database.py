@@ -33,6 +33,8 @@ class Admin(UserMixin,db.Model):
     email = db.Column(db.String(100), unique=True, index=True)  
     google_id = db.Column(db.String(100))
     openai_key = db.Column(db.String(100))
+    minimax_key = db.Column(db.String(200))
+    llm_provider = db.Column(db.String(50), default="openai", server_default="openai")
     profile_image = db.Column(db.String(100000))
     password = db.Column(db.String(100))
     created_date = db.Column(DateTime)

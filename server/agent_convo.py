@@ -8,6 +8,7 @@ from datetime import datetime, date, timedelta, timezone
 import os, pickle, codecs
 from typing import List
 from langchain.chat_models import ChatOpenAI
+from llm_provider import create_chat_model, PROVIDER_OPENAI
 from langchain.prompts.chat import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
@@ -59,7 +60,11 @@ def rp_isLoggedIn():
             keyAdded = None
         else:
             keyAdded = current_user.openai_key
-        return jsonify(isLoggedIn=current_user.is_authenticated,userId=current_user.id,key_added=keyAdded,image=current_user.profile_image)
+        provider = getattr(current_user, 'llm_provider', 'openai') or 'openai'
+        minimax_key = getattr(current_user, 'minimax_key', None)
+        if provider == "minimax" and minimax_key:
+            keyAdded = minimax_key
+        return jsonify(isLoggedIn=current_user.is_authenticated,userId=current_user.id,key_added=keyAdded,image=current_user.profile_image,provider=provider)
     else:
         return jsonify(isLoggedIn=False,auth_url=login_url)
 
@@ -146,7 +151,7 @@ class CAMELAgent:
 
 
 
-def starting_convo(assistant_role_name,user_role_name,task):
+def starting_convo(assistant_role_name,user_role_name,task,provider=None,api_key=None):
     task_specifier_sys_msg = SystemMessage(content="You can make a task more specific.")
     task_specifier_prompt = (
     """Here is a task that {assistant_role_name} will help {user_role_name} to complete: {task}.
@@ -154,7 +159,7 @@ def starting_convo(assistant_role_name,user_role_name,task):
     Please reply with the specified task in {word_limit} words or less. Do not add anything else."""
     )
     task_specifier_template = HumanMessagePromptTemplate.from_template(template=task_specifier_prompt)
-    task_specify_agent = CAMELAgent(task_specifier_sys_msg, ChatOpenAI(temperature=1.0),None)
+    task_specify_agent = CAMELAgent(task_specifier_sys_msg, create_chat_model(provider=provider,api_key=api_key,temperature=1.0),None)
     task_specifier_msg = task_specifier_template.format_messages(assistant_role_name=assistant_role_name,
                                                                 user_role_name=user_role_name,
                                                                 task=task, word_limit=word_limit)[0]
@@ -227,7 +232,12 @@ def get_sys_msgs(assistant_role_name: str, user_role_name: str, task: str,assist
 def start_rp():
     if not current_user.is_authenticated:
         return redirect("/agent_convo")
-    os.environ["OPENAI_API_KEY"] = current_user.openai_key
+    provider = getattr(current_user, 'llm_provider', None) or PROVIDER_OPENAI
+    if provider == "minimax":
+        api_key = current_user.minimax_key
+    else:
+        api_key = current_user.openai_key
+        os.environ["OPENAI_API_KEY"] = api_key
     assistant_role_name = request.json["role1"]
     user_role_name = request.json["role2"]
     task = request.json["task"]
@@ -236,10 +246,10 @@ def start_rp():
         getSession = Agent_Session(role_1=assistant_role_name,role_2=user_role_name,task=task,admin_id=current_user.id)
         db.session.add(getSession)
         db.session.commit()
-        specified_task,assistant_inception_prompt,user_inception_prompt = starting_convo(assistant_role_name, user_role_name, task)
+        specified_task,assistant_inception_prompt,user_inception_prompt = starting_convo(assistant_role_name, user_role_name, task, provider=provider, api_key=api_key)
         assistant_sys_msg, user_sys_msg = get_sys_msgs(assistant_role_name, user_role_name, specified_task,assistant_inception_prompt,user_inception_prompt)
-        assistant_agent = CAMELAgent(assistant_sys_msg, ChatOpenAI(temperature=0.2),None)
-        user_agent = CAMELAgent(user_sys_msg, ChatOpenAI(temperature=0.2),None)
+        assistant_agent = CAMELAgent(assistant_sys_msg, create_chat_model(provider=provider,api_key=api_key,temperature=0.2),None)
+        user_agent = CAMELAgent(user_sys_msg, create_chat_model(provider=provider,api_key=api_key,temperature=0.2),None)
         # Reset agents
         assistant_agent.reset()
         user_agent.reset()
@@ -256,8 +266,8 @@ def start_rp():
         getSession = Agent_Session.query.filter_by(id=sessId).first()
         user_store = pickle.loads(codecs.decode((getSession.user_store).encode(), "base64"))
         assistant_store = pickle.loads(codecs.decode((getSession.assistant_store).encode(), "base64"))
-        user_agent = CAMELAgent(None, ChatOpenAI(temperature=0.2),user_store)
-        assistant_agent = CAMELAgent(None, ChatOpenAI(temperature=0.2),assistant_store)
+        user_agent = CAMELAgent(None, create_chat_model(provider=provider,api_key=api_key,temperature=0.2),user_store)
+        assistant_agent = CAMELAgent(None, create_chat_model(provider=provider,api_key=api_key,temperature=0.2),assistant_store)
         assistant_msg = HumanMessage(
             content=(f"{assistant_store[-1].content}"))
 
