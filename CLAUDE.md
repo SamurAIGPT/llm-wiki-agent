@@ -39,6 +39,109 @@ tools/        # Optional standalone Python scripts (require ANTHROPIC_API_KEY)
 
 ---
 
+## Ingestion Queue — Raw Files To Process
+
+> **Rule: ingest ONE file per session. Check it off when done (`- [x]`). Never skip the Ingest Workflow steps.**
+> Source: all files were copied from `netzkontrast/dual-kernel/Markdown-docs` on 2026-04-10.
+> Progress: **0 / 94 ingested**
+
+- [ ] `raw/40ChapterPlotModule.md`
+- [ ] `raw/AegisAnalyseUndPromptOptimierung.md`
+- [ ] `raw/AegisEmergenzAusDerLeere.md`
+- [ ] `raw/AegisGenesisKrise20prosaAuftrag20formulieren.md`
+- [ ] `raw/AegisPhilosophieUndManifestEntwicklung.md`
+- [ ] `raw/AegisPhilosophieUndSystemtheorie.md`
+- [ ] `raw/AegisPhilosophischeUndSystemtheoretischeAnalyse.md`
+- [ ] `raw/AegisProtokolleKritischeEvaluationNeukonzeption.md`
+- [ ] `raw/AnIntroductionToTheConceptsOfCoherenceProtocol.md`
+- [ ] `raw/AngereichertesPlotkonzeptKapitelthemenKoharenzProtokoll.md`
+- [ ] `raw/Blueprint.md`
+- [ ] `raw/BridgingNarrativeTheoryAndAiAuthorship.md`
+- [ ] `raw/CharakterarchitekturFurNarrativesRomanprojekt.md`
+- [ ] `raw/DialetheismusImKoharenzProtokoll.md`
+- [ ] `raw/DramaticaTheoryOverviewAndResources.md`
+- [ ] `raw/DramaturgicalPrecisionDeconstructingTheIrreversibleConflictInKoharenzProtokoll.md`
+- [ ] `raw/DualKernelAiAndNarrativeCollapse.md`
+- [ ] `raw/EinleitungGenesisDerExistenz.md`
+- [ ] `raw/EmergenzAutonomerSystemeAegisForschung.md`
+- [ ] `raw/ErkenntnistheorieFurNarrativeProjektgestaltung.md`
+- [ ] `raw/ExistenzKosmosSeinUndBewusstsein.md`
+- [ ] `raw/ForschungsprojektKoharenzProtokollAnalyse.md`
+- [ ] `raw/GrenzenDerExistenzEineUmfassendeAnalyse.md`
+- [ ] `raw/GuardiansUndKernWeltenKonzept.md`
+- [ ] `raw/HolographischesPrinzipFurKoharenzProtokoll.md`
+- [ ] `raw/IdentitatGrenzenUndWandel.md`
+- [ ] `raw/InterdisziplinareRechercheFurKoharenzProtokoll.md`
+- [ ] `raw/KaelsDissociativeArchitectureAnalysis.md`
+- [ ] `raw/KernweltenFurKoharenzProtokoll.md`
+- [ ] `raw/KoharenzProtokoll39KapitelMatrix.md`
+- [ ] `raw/KoharenzProtokollKapitelstrukturMitKonzepten39Kapitel.md`
+- [ ] `raw/KoharenzProtokollKonzept.md`
+- [ ] `raw/KoharenzProtokollKonzeptionelleAusarbeitung.md`
+- [ ] `raw/KoharenzProtokollKonzeptionelleThemenStruktur.md`
+- [ ] `raw/KoharenzProtokollMetaForeshadowingBeobachterLogik.md`
+- [ ] `raw/KoharenzProtokollPlotBlueprintErstellung.md`
+- [ ] `raw/KoharenzProtokollPlotEntwicklungUndWahrheitsdualitat.md`
+- [ ] `raw/KopieVonNarrativeLosungenFurRomanprojekt.md`
+- [ ] `raw/LogiksystemAegisEntwicklungsszenarien.md`
+- [ ] `raw/MonstergruppeAlsDenkmodellDerKomplexitat.md`
+- [ ] `raw/MonstergruppeBabymonstergruppeFragmentierungErzahlung.md`
+- [ ] `raw/MonstergruppeNarrativeClusterUndMetaphern.md`
+- [ ] `raw/NarrativExistenziellerKoharenzNztProtokoll.md`
+- [ ] `raw/NarrativePlotExplorationExistenzielleKoharenz.md`
+- [ ] `raw/NarrativeRekombinationPotenzialExplorationPlotSynopsen.md`
+- [ ] `raw/NarrativeVertiefungKoharenzProtokoll.md`
+- [ ] `raw/OrteKonzeptFurKoharenzProtokoll.md`
+- [ ] `raw/PVsNpUndKoharenz.md`
+- [ ] `raw/ParadoxienDerKoharenzProtokollEntwicklung.md`
+- [ ] `raw/ParakonsistenteLogikFurKoharenzProtokoll.md`
+- [ ] `raw/ParakonsistenzAegisUndNichtExistenz.md`
+- [ ] `raw/PhilosophieGrenzenUndZukunft.md`
+- [ ] `raw/PhysikGrenzenUndRatselDesUniversums.md`
+- [ ] `raw/PlotBlueprintMethodikKoharenzProtokoll.md`
+- [ ] `raw/PlotExplorationKoharenzProtokollkonzepte.md`
+- [ ] `raw/PlotKonzepteKoharenzProtokollGenerierung.md`
+- [ ] `raw/PlotkonzeptKoharenzProtokollHeldinnenreiseStruktur.md`
+- [ ] `raw/ProjektKoharenzProtokollTiefenanalyse.md`
+- [ ] `raw/README.md`
+- [ ] `raw/RomanBlueprintSeelenKoharenzProtokoll.md`
+- [ ] `raw/RomanEntwicklungKoharenzUndLeitfragen.md`
+- [ ] `raw/RomanFundamentTheoretischeRecherche.md`
+- [ ] `raw/RomanKapitelAusformulierungKoharenzProtokoll.md`
+- [ ] `raw/RomanKoharenzProtokoll.md`
+- [ ] `raw/RomanKoharenzProtokoll2.md`
+- [ ] `raw/RomanKonzeptDualitatKoharenzSpannung.md`
+- [ ] `raw/RomanKonzeptentwicklungKoharenzProtokoll.md`
+- [ ] `raw/RomanLokalitatenKonzeptUndAusarbeitung.md`
+- [ ] `raw/RomanRefactoringKoharenzUndCharakterentwicklung.md`
+- [ ] `raw/RomanSyntheseMitDualKernelTheorie.md`
+- [ ] `raw/RomanUrvertrauenLiebeTranszendenz.md`
+- [ ] `raw/RomanWorldbuildingFragmentierteIdentitatMetaRealitat.md`
+- [ ] `raw/RomanentwurfKoharenzProtokollTeil1.md`
+- [ ] `raw/Romanstruktur3Teile39Kapitel1Anfang.md`
+- [ ] `raw/RomanstrukturUndPhilosophischeEinleitung.md`
+- [ ] `raw/SpannungsfelderUndAegisMetaFrameworkAnalyse.md`
+- [ ] `raw/StorytellingCommandmentsExplained.md`
+- [ ] `raw/SymmetrieParadoxieExistenzJenseitsSimulation.md`
+- [ ] `raw/SymmetrienClusterungUberWissensgebieteHinweg.md`
+- [ ] `raw/TheCoherenceProtocolADefinitiveGuideToTheNarrativeArchitecture.md`
+- [ ] `raw/TheCoherenceProtocolANarrativeDesignWorldArchitectureDocument.md`
+- [ ] `raw/TheFoundationProtocolAMetaphysicalThesisOnTheReAnchoringOfReality.md`
+- [ ] `raw/TheKoharenzProtokollADefinitiveGuideToNarrativeArchitecture.md`
+- [ ] `raw/TheThematicArchitectureOfKoharenzProtokollAConceptualLexiconOfCoreDualities.md`
+- [ ] `raw/TheTrueCoherenceProtocolArchitectingKaelsJourneyFromTsdpFragmentationToFunctionalMultiplicity.md`
+- [ ] `raw/Top13ForschungsfragenZurRealitat.md`
+- [ ] `raw/TranszendenzLogischerSystemeEntropie.md`
+- [ ] `raw/TranszendenzUndParadoxienVerbindungslinien.md`
+- [ ] `raw/TsdpAnalyseKaelsInnereWelt.md`
+- [ ] `raw/UmfassendesLokalitatenKonzeptFurRoman.md`
+- [ ] `raw/VTheFoundationAndKaelsIntegrationArc.md`
+- [ ] `raw/WahrheitstheorienKoharenzVsKorrespondenz.md`
+- [ ] `raw/ZeitGrenzenWahrnehmungUndTheorien.md`
+- [ ] `raw/test-kael-konflikt.md`
+
+---
+
 ## Page Format
 
 Every wiki page uses this frontmatter:
