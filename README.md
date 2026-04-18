@@ -226,9 +226,18 @@ If you want to keep the LLM Wiki Agent repository separate from your main person
 - **Graph View:** Filter out `index.md` and `log.md` (e.g. `-file:index.md -file:log.md`) to avoid them becoming gravity wells in your Obsidian graph.
 - **Dataview:** Use the community plugin [Dataview](https://blacksmithgu.github.io/obsidian-dataview/) to query the YAML frontmatter the agent automatically injects (e.g., `type: source`, `tags: [diary]`).
 
-## Converting PDFs and arXiv Papers
+## Converting Files, PDFs, and arXiv Papers
 
-The wiki ingests Markdown files. Use `tools/pdf2md.py` to convert PDFs and arXiv papers before ingesting:
+The wiki ingests Markdown files. Use `files_to_md.py` to convert files or `tools/pdf2md.py` to convert PDFs and arXiv papers before ingesting:
+
+```bash
+python tools/files_to_md.py --input_dir  ../raw/
+
+# optionally, if users would like to delete source files:
+python tools/files_to_md.py --input_dir ../raw/ --delete_source
+```
+
+Or if users want to use papers from arXiv:
 
 ```bash
 # arXiv papers — by ID or URL (uses arxiv2md, no PDF parsing needed)
@@ -256,10 +265,13 @@ Install at least one conversion backend:
 | [arxiv2md](https://github.com/ryansingman/arxiv2md) | `pip install arxiv2markdown` | arXiv papers (uses structured source, avoids PDF parsing) |
 | [Marker](https://github.com/VikParuchuri/marker) | `pip install marker-pdf` | Complex academic PDFs with multi-column layouts, tables, equations |
 | [PyMuPDF4LLM](https://github.com/pymupdf/RAG) | `pip install pymupdf4llm` | Fast extraction from native-text PDFs (no GPU needed) |
+[markitdown](https://github.com/microsoft/markitdown) | `pip install markitdown` | for converting files to markdown
+[tqdm](https://github.com/tqdm/tqdm) | `pip install tqdm` | for progress bar during conversion
 
 ## Tips
 
-- Use `tools/pdf2md.py` to convert PDFs and arXiv papers to Markdown before ingesting — see [Converting PDFs](#converting-pdfs-and-arxiv-papers)
+- Use `tools/files_to_md.py` to convert files to Markdown before injesting — see [Converting Files, PDFs, and arXiv Papers](#converting-files-pdfs-and-arxiv-papers)
+- Use `tools/pdf2md.py` to convert PDFs and arXiv papers to Markdown before ingesting — see [Converting Files, PDFs, and arXiv Papers](#converting-files-pdfs-and-arxiv-papers)
 - Query answers are shown first — the agent then asks if you want to file them as synthesis pages. Your explorations compound just like ingested sources
 - The wiki is a git repo — version history for free
 - Standalone Python scripts in `tools/` work without a coding agent (require `ANTHROPIC_API_KEY`)
