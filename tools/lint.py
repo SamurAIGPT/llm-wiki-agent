@@ -107,6 +107,30 @@ def find_missing_entities(pages: list[Path]) -> list[str]:
     return [name for name, count in mention_counts.items() if count >= 3]
 
 
+def check_link_density(pages: list[Path], min_outbound: int = 2) -> list[dict]:
+    """Find pages with fewer than min_outbound outgoing wikilinks.
+
+    Pages without enough outgoing connections contribute to wiki fragmentation.
+    Excludes overview.md (which is a synthesis page with different linking patterns).
+    """
+    results = []
+    for p in pages:
+        if p.name == "overview.md":
+            continue
+        content = read_file(p)
+        links = extract_wikilinks(content)
+        # Deduplicate links per page
+        unique_links = set(link.lower() for link in links)
+        if len(unique_links) < min_outbound:
+            results.append({
+                "path": str(p.relative_to(REPO_ROOT)),
+                "outbound_links": len(unique_links),
+                "links": sorted(unique_links),
+            })
+    results.sort(key=lambda x: x["outbound_links"])
+    return results
+
+
 # ── Graph-aware checks ──────────────────────────────────────────────
 
 def load_graph_data() -> dict | None:
@@ -251,6 +275,10 @@ def run_lint():
     print(f"  broken links: {len(broken)}")
     print(f"  missing entity pages: {len(missing_entities)}")
 
+    # Link density check
+    sparse_pages = check_link_density(pages)
+    print(f"  sparse pages (< 2 outbound links): {len(sparse_pages)}")
+
     # ── Graph-aware checks ──
     graph_data = load_graph_data()
     hub_stubs: list[dict] = []
@@ -327,8 +355,19 @@ Be specific — name the exact pages and claims involved.
             report_lines.append(f"- `[[{name}]]`")
         report_lines.append("")
 
-    if not orphans and not broken and not missing_entities:
+    if not orphans and not broken and not missing_entities and not sparse_pages:
         report_lines.append("No structural issues found.")
+        report_lines.append("")
+
+    if sparse_pages:
+        report_lines.append(f"### Sparse Pages — Low Outbound Link Density ({len(sparse_pages)} pages)")
+        report_lines.append("These pages have fewer than 2 outbound wikilinks. Add connections to prevent orphan accumulation:")
+        report_lines.append("")
+        report_lines.append("| Page | Outbound Links | Existing Links |")
+        report_lines.append("|---|---|---|")
+        for sp in sparse_pages:
+            existing = ", ".join(f"`[[{l}]]`" for l in sp["links"]) if sp["links"] else "—"
+            report_lines.append(f"| `{sp['path']}` | {sp['outbound_links']} | {existing} |")
         report_lines.append("")
 
     # ── Graph-Aware Issues section ──

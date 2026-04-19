@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 """
 Build the knowledge graph from the wiki.
 
@@ -408,11 +410,44 @@ def detect_communities(nodes: list[dict], edges: list[dict]) -> dict[str, int]:
         return {}
 
 
-def generate_report(nodes: list[dict], edges: list[dict], communities: dict[str, int]) -> str:
+def find_phantom_hubs(pages: list[Path], min_refs: int = 2) -> list[dict]:
+    """Find wikilinks referenced by multiple pages but pointing to non-existent pages.
+
+    These are strong signals for pages that should be created next.
+    Returns list of dicts with 'name', 'ref_count', and 'referenced_by' keys,
+    sorted by ref_count descending.
+    """
+    existing_stems = {p.stem.lower() for p in pages}
+    # Count how many distinct pages reference each missing target
+    refs: dict[str, set[str]] = {}  # target_name -> set of source page_ids
+    for p in pages:
+        content = read_file(p)
+        links = extract_wikilinks(content)
+        src = page_id(p)
+        for link in links:
+            if link.lower() not in existing_stems:
+                refs.setdefault(link, set()).add(src)
+
+    phantoms = [
+        {
+            "name": name,
+            "ref_count": len(sources),
+            "referenced_by": sorted(sources),
+        }
+        for name, sources in refs.items()
+        if len(sources) >= min_refs
+    ]
+    phantoms.sort(key=lambda x: x["ref_count"], reverse=True)
+    return phantoms
+
+
+def generate_report(nodes: list[dict], edges: list[dict], communities: dict[str, int],
+                    pages: list[Path] | None = None) -> str:
     """Generate a structured graph health report.
 
     Analyzes the graph for orphan nodes, hub pages (god nodes),
-    fragile inter-community bridges, and overall connectivity health.
+    fragile inter-community bridges, phantom hubs (referenced but
+    non-existent pages), and overall connectivity health.
     """
     today = date.today().isoformat()
     n_nodes = len(nodes)
@@ -543,6 +578,26 @@ def generate_report(nodes: list[dict], edges: list[dict], communities: dict[str,
     lines.append("")
 
     # Suggested actions
+    # Phantom hubs section
+    phantoms = find_phantom_hubs(pages) if pages else []
+    lines.append("## 🟠 Phantom Hubs (referenced but non-existent pages)")
+    if phantoms:
+        lines.append("These pages are referenced by 2+ existing pages but don't exist yet.")
+        lines.append("They represent strong page creation signals — prioritize by reference count:")
+        lines.append("")
+        lines.append("| Page Name | References | Referenced By |")
+        lines.append("|---|---|---|")
+        for ph in phantoms:
+            refs_preview = ", ".join(ph["referenced_by"][:3])
+            if len(ph["referenced_by"]) > 3:
+                refs_preview += ", …"
+            lines.append(f"| `[[{ph['name']}]]` | {ph['ref_count']} | {refs_preview} |")
+    elif pages:
+        lines.append("No phantom hubs — all referenced pages exist.")
+    else:
+        lines.append("Phantom hub detection skipped (no page data available).")
+    lines.append("")
+
     lines.append("## Suggested Actions")
     actions = []
     if orphans:
@@ -551,6 +606,8 @@ def generate_report(nodes: list[dict], edges: list[dict], communities: dict[str,
         actions.append(f"{len(actions)+1}. Review god nodes for stub content vs. genuine hubs")
     if fragile_bridges:
         actions.append(f"{len(actions)+1}. Strengthen fragile bridges with cross-references")
+    if phantoms:
+        actions.append(f"{len(actions)+1}. Create pages for top phantom hubs (start with `[[{phantoms[0]['name']}]]` — {phantoms[0]['ref_count']} references)")
     if not actions:
         actions.append("1. Graph is in good shape — maintain current linking practices")
     lines.extend(actions)
@@ -1219,7 +1276,7 @@ def build_graph(infer: bool = True, open_browser: bool = False, clean: bool = Fa
         if not HAS_NETWORKX:
             print("Warning: networkx not installed. Cannot generate report.")
         else:
-            report_text = generate_report(nodes, edges, communities)
+            report_text = generate_report(nodes, edges, communities, pages=pages)
             print("\n" + report_text)
             if save:
                 report_path = GRAPH_DIR / "graph-report.md"
