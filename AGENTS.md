@@ -165,7 +165,13 @@ Check for:
 - **Contradictions** — claims that conflict across pages
 - **Stale summaries** — pages not updated after newer sources
 - **Missing entity pages** — entities mentioned in 3+ pages but lacking their own page
+- **Sparse pages** — pages with fewer than 2 outbound `[[wikilinks]]` (link density budget)
 - **Data gaps** — questions the wiki can't answer; suggest new sources
+
+Graph-aware checks (require `graph.json` from `build graph`):
+- **Hub stubs** — god nodes (degree > μ+2σ) with thin content (< 500 chars)
+- **Fragile bridges** — community pairs connected by only 1 edge
+- **Isolated communities** — clusters with zero external connections
 
 Output a lint report and ask if the user wants it saved to `wiki/lint-report.md`.
 
@@ -217,4 +223,37 @@ If Python/deps unavailable, build manually:
 
 `## [YYYY-MM-DD] <operation> | <title>`
 
-Operations: `ingest`, `query`, `lint`, `graph`
+Operations: `ingest`, `query`, `lint`, `graph`, `report`
+
+---
+
+## Graph Health Report
+
+Triggered by: *"graph report"* or `python tools/build_graph.py --report`
+
+The `--report` flag generates a structured graph health report covering:
+- **Health summary** — edges/node ratio, orphan %, community count, link density
+- **Orphan nodes** — pages with zero graph connections
+- **God nodes** — hub pages with degree > μ+2σ (disproportionate connectivity)
+- **Fragile bridges** — community pairs connected by only 1 edge
+- **Phantom hubs** — `[[wikilinks]]` referenced by 2+ existing pages but pointing to non-existent pages (page creation signals)
+
+Use `--save` to write the report to `graph/graph-report.md`.
+
+---
+
+## Phase 3 Design Constraints (Auto-Linking — Open)
+
+Phase 3 proposes automatic `[[wikilink]]` insertion based on graph analysis. The following hard rules apply:
+
+### Promotion Gate: `draft → stable`
+- Auto-linked edges start as `DRAFT` (visible in graph, not written to page body)
+- A dedicated `promote` pass validates source grounding + consistency
+- Only edges that pass get materialized as `[[wikilinks]]` in the page
+- **Link density budget**: a page must have ≥2 outbound wikilinks before promotion
+
+### Hard Rules
+| ID | Rule | Rationale |
+|---|---|---|
+| HG-WA-01 | Graph layer MUST NOT auto-create pages from broken links — report only | LLM ingest produces hallucinated wikilinks; auto-creating amplifies noise |
+| HG-WA-02 | New slash commands MUST NOT duplicate existing command coverage | Prevents user confusion; merge into existing commands instead |
