@@ -154,7 +154,9 @@ Triggered by: *"query: <question>"*
 
 Triggered by: *"lint"*
 
-Check for: orphan pages, broken links, contradictions, stale content, missing entity pages, data gaps.
+Check for: orphan pages, broken links, contradictions, stale content, missing entity pages, sparse pages (< 2 outbound links), data gaps.
+
+Graph-aware checks (require `graph.json`): hub stubs, fragile bridges, isolated communities.
 
 ---
 
@@ -174,3 +176,22 @@ Try `python tools/build_graph.py --open` first. If unavailable, build graph.json
 ## Log Format
 
 `## [YYYY-MM-DD] <operation> | <title>`
+
+Operations: `ingest`, `query`, `lint`, `graph`, `report`
+
+---
+
+## Graph Health Report
+
+Triggered by: *"graph report"* or `python tools/build_graph.py --report`
+
+Covers: health summary, orphan nodes, god nodes, fragile bridges, phantom hubs. Use `--save` to persist.
+
+---
+
+## Phase 3 Design Constraints (Auto-Linking — Open)
+
+- Auto-linked edges start as `DRAFT`, require promotion gate validation
+- Link density budget: ≥2 outbound wikilinks before promotion
+- HG-WA-01: Graph layer MUST NOT auto-create pages from broken links
+- HG-WA-02: New commands MUST NOT duplicate existing command coverage
