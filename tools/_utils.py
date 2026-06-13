@@ -79,10 +79,11 @@ def call_llm(
 
 # ── Hashing ────────────────────────────────────────────────────────────
 
-def sha256(text: str, truncate: int = 16) -> str:
+def sha256(text: str, truncate: int = 0) -> str:
     """SHA-256 hex digest of *text*, optionally truncated to *truncate* chars.
 
-    Pass truncate=0 for the full 64-char hash.
+    Default is the full 64-char hash.  Pass truncate=16 for the short form
+    used by ingest.py and refresh.py.
     """
     h = hashlib.sha256(text.encode()).hexdigest()
     return h[:truncate] if truncate else h
@@ -111,9 +112,10 @@ def all_wiki_pages(extra_exclude: set[str] | None = None) -> list[Path]:
 
 
 def append_log(entry: str):
-    """Prepend a timestamped log entry to wiki/log.md (newest-first).
+    """Prepend a log entry to wiki/log.md (newest-first).
 
     Creates the file with a standard header if it doesn't exist.
+    Preserves the prepend semantics used by ingest.py, query.py, and lint.py.
     """
     entry_text = entry.strip()
 
@@ -128,12 +130,5 @@ def append_log(entry: str):
         )
         return
 
-    existing = read_file(LOG_FILE).rstrip()
-    if not existing:
-        existing = (
-            "# Wiki Log\n\n"
-            "> Records important additions, revisions, and clarifications in the "
-            "project knowledge layer. Maintained in append-only mode for agent and "
-            "human traceability."
-        )
-    LOG_FILE.write_text(existing + "\n\n" + entry_text + "\n", encoding="utf-8")
+    existing = read_file(LOG_FILE)
+    LOG_FILE.write_text(entry_text + "\n\n" + existing, encoding="utf-8")

@@ -69,7 +69,7 @@ def find_stale_sources(force: bool = False) -> list[tuple[Path, Path]]:
                 continue
 
         raw_content = read_file(raw_path)
-        current_hash = sha256(raw_content)
+        current_hash = sha256(raw_content, truncate=16)
         cached_hash = cache.get(str(raw_path))
 
         if force or cached_hash != current_hash:

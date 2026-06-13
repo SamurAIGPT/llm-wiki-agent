@@ -191,7 +191,7 @@ def build_inferred_edges(pages: list[Path], existing_edges: list[dict], cache: d
     changed_pages = []
     for p in pages:
         content = read_file(p)
-        h = sha256(content, truncate=0)
+        h = sha256(content)
         pid = page_id(p)
         entry = cache.get(str(p))
 
@@ -312,7 +312,7 @@ Rules:
                     })
 
             cache[str(p)] = {
-                "hash": sha256(full_content, truncate=0),
+                "hash": sha256(full_content),
                 "edges": valid_rels,
             }
             append_checkpoint(src, page_edges)

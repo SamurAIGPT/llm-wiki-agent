@@ -196,7 +196,7 @@ def ingest(source_path: str, auto_convert: bool = True):
         source = converted_path
 
     source_content = source.read_text(encoding="utf-8")
-    source_hash = sha256(source_content)
+    source_hash = sha256(source_content, truncate=16)
     today = date.today().isoformat()
 
     print(f"\nIngesting: {source.name}  (hash: {source_hash})")
