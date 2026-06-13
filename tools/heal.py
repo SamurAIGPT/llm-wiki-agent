@@ -37,11 +37,12 @@ def sanitize_filename(name: str) -> str:
     Removes path separators, null bytes, and leading dots to prevent
     directory traversal when using LLM-derived entity names as filenames.
     """
+    original = name
     name = re.sub(r"[/\\:\0]", "", name)
     name = name.lstrip(".")
     name = "_".join(name.split())
     if not name:
-        raise ValueError(f"Entity name is empty after sanitization: {name!r}")
+        raise ValueError(f"Entity name became empty after sanitization: {original!r}")
     return name
 
 def call_llm(prompt: str, max_tokens: int = 1500) -> str:
