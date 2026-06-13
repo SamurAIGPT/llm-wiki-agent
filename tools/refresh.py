@@ -11,28 +11,18 @@ Compares raw document hashes against stored hashes to detect changes.
 Re-ingests changed documents to update wiki/sources/ pages with accurate facts.
 """
 
-import os
 import sys
 import json
-import hashlib
 import re
-from typing import Optional
 from pathlib import Path
 from datetime import date
 
-REPO_ROOT = Path(__file__).parent.parent
-WIKI_DIR = REPO_ROOT / "wiki"
-RAW_DIR = REPO_ROOT / "raw"
+# Bootstrap shared utilities
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from tools._utils import REPO_ROOT, WIKI_DIR, RAW_DIR, GRAPH_DIR, read_file, sha256
+
 SOURCES_DIR = WIKI_DIR / "sources"
-REFRESH_CACHE = REPO_ROOT / "graph" / ".refresh_cache.json"
-
-
-def sha256(text: str) -> str:
-    return hashlib.sha256(text.encode()).hexdigest()[:16]
-
-
-def read_file(path: Path) -> str:
-    return path.read_text(encoding="utf-8") if path.exists() else ""
+REFRESH_CACHE = GRAPH_DIR / ".refresh_cache.json"
 
 
 def load_refresh_cache() -> dict:
@@ -49,7 +39,7 @@ def save_refresh_cache(cache: dict):
     REFRESH_CACHE.write_text(json.dumps(cache, indent=2, ensure_ascii=False))
 
 
-def extract_source_file(content: str) -> Optional[str]:
+def extract_source_file(content: str) -> str | None:
     """Extract source_file from YAML frontmatter."""
     match = re.search(r'^source_file:\s*(.+)$', content, re.MULTILINE)
     if match:
@@ -90,10 +80,8 @@ def find_stale_sources(force: bool = False) -> list[tuple[Path, Path]]:
 
 def refresh_page(wiki_page: Path, raw_path: Path) -> bool:
     """Re-ingest a single source document."""
-    # Import ingest function
-    sys.path.insert(0, str(Path(__file__).parent))
     try:
-        from ingest import ingest
+        from tools.ingest import ingest
         print(f"\n{'='*60}")
         print(f"  Refreshing: {wiki_page.name}")
         print(f"  From:       {raw_path}")

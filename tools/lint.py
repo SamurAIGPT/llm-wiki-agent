@@ -25,43 +25,14 @@ from pathlib import Path
 from collections import defaultdict
 from datetime import date
 
-import os
+# Bootstrap shared utilities
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from tools._utils import (
+    REPO_ROOT, WIKI_DIR, GRAPH_DIR, LOG_FILE, SCHEMA_FILE,
+    read_file, call_llm, all_wiki_pages, extract_wikilinks, append_log,
+)
 
-REPO_ROOT = Path(__file__).parent.parent
-WIKI_DIR = REPO_ROOT / "wiki"
-GRAPH_DIR = REPO_ROOT / "graph"
 GRAPH_JSON = GRAPH_DIR / "graph.json"
-LOG_FILE = WIKI_DIR / "log.md"
-SCHEMA_FILE = REPO_ROOT / "CLAUDE.md"
-
-
-def read_file(path: Path) -> str:
-    return path.read_text(encoding="utf-8") if path.exists() else ""
-
-
-def call_llm(prompt: str, model_env: str, default_model: str, max_tokens: int = 4096) -> str:
-    try:
-        from litellm import completion
-    except ImportError:
-        print("Error: litellm not installed. Run: pip install litellm")
-        sys.exit(1)
-        
-    model = os.getenv(model_env, default_model)
-    response = completion(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=max_tokens
-    )
-    return response.choices[0].message.content
-
-
-def all_wiki_pages() -> list[Path]:
-    return [p for p in WIKI_DIR.rglob("*.md")
-            if p.name not in ("index.md", "log.md", "lint-report.md")]
-
-
-def extract_wikilinks(content: str) -> list[str]:
-    return re.findall(r'\[\[([^\]]+)\]\]', content)
 
 
 def page_name_to_path(name: str) -> list[Path]:
@@ -430,11 +401,6 @@ Be specific — name the exact pages and claims involved.
     report = "\n".join(report_lines)
     print("\n" + report)
     return report
-
-
-def append_log(entry: str):
-    existing = read_file(LOG_FILE)
-    LOG_FILE.write_text(entry.strip() + "\n\n" + existing, encoding="utf-8")
 
 
 if __name__ == "__main__":

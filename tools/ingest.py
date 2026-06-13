@@ -24,10 +24,8 @@ The LLM reads the source, extracts knowledge, and updates the wiki:
   - Runs post-ingest validation (broken links, index coverage)
 """
 
-import os
 import sys
 import json
-import hashlib
 import re
 import shutil
 import tempfile
@@ -35,11 +33,12 @@ from pathlib import Path
 from collections import defaultdict
 from datetime import date
 
-REPO_ROOT = Path(__file__).parent.parent
-WIKI_DIR = REPO_ROOT / "wiki"
-LOG_FILE = WIKI_DIR / "log.md"
-INDEX_FILE = WIKI_DIR / "index.md"
-OVERVIEW_FILE = WIKI_DIR / "overview.md"
+# Bootstrap shared utilities
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from tools._utils import (
+    REPO_ROOT, WIKI_DIR, INDEX_FILE, OVERVIEW_FILE, LOG_FILE, SCHEMA_FILE,
+    read_file, write_file, call_llm, sha256, extract_wikilinks, all_wiki_pages, append_log,
+)
 
 # File extensions that can be auto-converted to markdown via markitdown.
 # .md files are ingested directly without conversion.
@@ -51,11 +50,6 @@ CONVERTIBLE_EXTENSIONS = {
     ".wav", ".mp3",  # audio transcription via markitdown
 }
 ALL_SUPPORTED_EXTENSIONS = {".md"} | CONVERTIBLE_EXTENSIONS
-SCHEMA_FILE = REPO_ROOT / "CLAUDE.md"
-
-
-def sha256(text: str) -> str:
-    return hashlib.sha256(text.encode()).hexdigest()[:16]
 
 
 def clip(text: str, limit: int = 260) -> str:
@@ -64,37 +58,6 @@ def clip(text: str, limit: int = 260) -> str:
         return text
     clipped = text[: limit - 3].rsplit(" ", 1)[0].rstrip()
     return clipped + "..."
-
-
-def read_file(path: Path) -> str:
-    return path.read_text(encoding="utf-8") if path.exists() else ""
-
-
-def call_llm(prompt: str, max_tokens: int = 8192) -> str:
-    try:
-        from litellm import completion
-    except ImportError:
-        print("Error: litellm not installed. Run: pip install litellm")
-        sys.exit(1)
-        
-    model = os.getenv("LLM_MODEL", "claude-3-5-sonnet-latest")
-    
-    kwargs = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}]
-    }
-    
-    if max_tokens:
-        kwargs["max_tokens"] = max_tokens
-
-    response = completion(**kwargs)
-    return response.choices[0].message.content
-
-
-def write_file(path: Path, content: str):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
-    print(f"  wrote: {path.relative_to(REPO_ROOT)}")
 
 
 def build_wiki_context() -> str:
@@ -135,25 +98,6 @@ def update_index(new_entry: str, section: str = "Sources"):
     write_file(INDEX_FILE, content)
 
 
-def append_log(entry: str):
-    existing = read_file(LOG_FILE)
-    write_file(LOG_FILE, entry.strip() + "\n\n" + existing)
-
-
-def extract_wikilinks(content: str) -> list[str]:
-    """Extract all [[WikiLink]] targets from page content."""
-    return re.findall(r'\[\[([^\]]+)\]\]', content)
-
-
-def all_wiki_pages() -> set[str]:
-    """Return set of all wiki page stems (case-insensitive)."""
-    pages = set()
-    for p in WIKI_DIR.rglob("*.md"):
-        if p.name not in ("index.md", "log.md", "lint-report.md"):
-            pages.add(p.stem.lower())
-    return pages
-
-
 def validate_ingest(changed_pages: list[str] | None = None) -> dict:
     """Validate wiki integrity after an ingest.
 
@@ -163,7 +107,7 @@ def validate_ingest(changed_pages: list[str] | None = None) -> dict:
 
     Returns dict with 'broken_links' and 'unindexed' lists.
     """
-    existing_pages = all_wiki_pages()
+    existing_pages = {p.stem.lower() for p in all_wiki_pages()}
     index_content = read_file(INDEX_FILE).lower()
 
     # Determine which pages to scan for broken links
@@ -387,12 +331,13 @@ if __name__ == "__main__":
             print("No broken wikilinks found.")
         print()
         pages = all_wiki_pages()
+        page_stems = {p.stem.lower() for p in pages}
         index_content = read_file(INDEX_FILE).lower()
         unindexed_all = []
         for p in WIKI_DIR.rglob("*.md"):
             if p.name in ("index.md", "log.md", "lint-report.md", "overview.md"):
                 continue
-            if p.stem.lower() not in index_content:
+            if p.stem.lower() not in page_stems and p.stem.lower() not in index_content:
                 unindexed_all.append(str(p.relative_to(WIKI_DIR)))
         if unindexed_all:
             print(f"Pages not in index.md: {len(unindexed_all)}")

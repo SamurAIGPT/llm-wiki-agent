@@ -2,33 +2,25 @@
 """
 Graph Self-Healing Tool
 
-Automatically retrieves "Missing Entity Pages" from the wiki and generates 
-comprehensive definition pages for them using the LLM. 
+Automatically retrieves "Missing Entity Pages" from the wiki and generates
+comprehensive definition pages for them using the LLM.
 It resolves broken entity links by scanning existing contexts where the entity is referenced.
 
 Usage:
     python tools/heal.py
 """
 
-import os
 import re
 import sys
 from pathlib import Path
 
-try:
-    from litellm import completion
-except ImportError:
-    print("Error: litellm not installed. Run: pip install litellm")
-    sys.exit(1)
-
-# Ensure tools can be imported
+# Bootstrap shared utilities
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from tools._utils import REPO_ROOT, WIKI_DIR, call_llm, all_wiki_pages
+from tools.lint import find_missing_entities
 
-from tools.lint import find_missing_entities, all_wiki_pages
-
-REPO_ROOT = Path(__file__).parent.parent
-WIKI_DIR = REPO_ROOT / "wiki"
 ENTITIES_DIR = WIKI_DIR / "entities"
+
 
 
 def sanitize_filename(name: str) -> str:
@@ -45,17 +37,6 @@ def sanitize_filename(name: str) -> str:
         raise ValueError(f"Entity name became empty after sanitization: {original!r}")
     return name
 
-def call_llm(prompt: str, max_tokens: int = 1500) -> str:
-    # Use litellm standard environment variables
-    # e.g., GEMINI_API_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY
-    model = os.getenv("LLM_MODEL", "claude-3-5-haiku-latest") # default to fast model
-    
-    response = completion(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=max_tokens
-    )
-    return response.choices[0].message.content
 
 def search_sources(entity: str, pages: list[Path]) -> list[Path]:
     """Find up to 15 pages where this entity is mentioned natively."""
@@ -105,7 +86,7 @@ sources: {[s.name for s in sources]}
 Write a comprehensive paragraph defining what `{entity}` means in the context of this wiki, its main significance, and any actions or associations related to it.
 """
         try:
-            result = call_llm(prompt)
+            result = call_llm(prompt, default_model="claude-3-5-haiku-latest")
             safe_name = sanitize_filename(entity)
             out_path = ENTITIES_DIR / f"{safe_name}.md"
             # Safety: ensure resolved path stays within entities directory

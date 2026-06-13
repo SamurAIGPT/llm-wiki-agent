@@ -20,6 +20,7 @@ Edge types:
 """
 
 import re
+import sys
 import json
 import hashlib
 import argparse
@@ -28,7 +29,12 @@ import webbrowser
 from pathlib import Path
 from datetime import date
 
-import os
+# Bootstrap shared utilities
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from tools._utils import (
+    REPO_ROOT, WIKI_DIR, GRAPH_DIR, LOG_FILE, SCHEMA_FILE,
+    read_file, call_llm, sha256, all_wiki_pages, extract_wikilinks, append_log,
+)
 
 try:
     import networkx as nx
@@ -38,15 +44,10 @@ except ImportError:
     HAS_NETWORKX = False
     print("Warning: networkx not installed. Community detection disabled. Run: pip install networkx")
 
-REPO_ROOT = Path(__file__).parent.parent
-WIKI_DIR = REPO_ROOT / "wiki"
-GRAPH_DIR = REPO_ROOT / "graph"
 GRAPH_JSON = GRAPH_DIR / "graph.json"
 GRAPH_HTML = GRAPH_DIR / "graph.html"
 CACHE_FILE = GRAPH_DIR / ".cache.json"
 INFERRED_EDGES_FILE = GRAPH_DIR / ".inferred_edges.jsonl"
-LOG_FILE = WIKI_DIR / "log.md"
-SCHEMA_FILE = REPO_ROOT / "CLAUDE.md"
 
 # Node type → color mapping
 TYPE_COLORS = {
@@ -62,45 +63,6 @@ EDGE_COLORS = {
     "INFERRED": "#FF5722",
     "AMBIGUOUS": "#BDBDBD",
 }
-
-
-def read_file(path: Path) -> str:
-    return path.read_text(encoding="utf-8") if path.exists() else ""
-
-
-def call_llm(prompt: str, model_env: str, default_model: str, max_tokens: int = 4096) -> str:
-    try:
-        from litellm import completion
-    except ImportError:
-        print("Error: litellm not installed. Run: pip install litellm")
-        import sys
-        sys.exit(1)
-
-    model = os.getenv(model_env, default_model)
-
-    kwargs = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}]
-    }
-
-    if max_tokens:
-        kwargs["max_tokens"] = max_tokens
-
-    response = completion(**kwargs)
-    return response.choices[0].message.content
-
-
-def sha256(text: str) -> str:
-    return hashlib.sha256(text.encode()).hexdigest()
-
-
-def all_wiki_pages() -> list[Path]:
-    return [p for p in WIKI_DIR.rglob("*.md")
-            if p.name not in ("index.md", "log.md", "lint-report.md")]
-
-
-def extract_wikilinks(content: str) -> list[str]:
-    return list(set(re.findall(r'\[\[([^\]]+)\]\]', content)))
 
 
 def extract_frontmatter_type(content: str) -> str:
@@ -161,7 +123,7 @@ def build_extracted_edges(pages: list[Path]) -> list[dict]:
     for p in pages:
         content = read_file(p)
         src = page_id(p)
-        for link in extract_wikilinks(content):
+        for link in extract_wikilinks(content, unique=True):
             target = stem_map.get(link.lower())
             if target and target != src:
                 key = (src, target)
@@ -229,7 +191,7 @@ def build_inferred_edges(pages: list[Path], existing_edges: list[dict], cache: d
     changed_pages = []
     for p in pages:
         content = read_file(p)
-        h = sha256(content)
+        h = sha256(content, truncate=0)
         pid = page_id(p)
         entry = cache.get(str(p))
 
@@ -350,7 +312,7 @@ Rules:
                     })
 
             cache[str(p)] = {
-                "hash": sha256(full_content),
+                "hash": sha256(full_content, truncate=0),
                 "edges": valid_rels,
             }
             append_checkpoint(src, page_edges)
@@ -1178,27 +1140,6 @@ applyFilters();
 </script>
 </body>
 </html>"""
-
-
-def append_log(entry: str):
-    log_path = WIKI_DIR / "log.md"
-    entry_text = entry.strip()
-    if not log_path.exists():
-        log_path.write_text(
-            "# Wiki Log\n\n"
-            "> Records important additions, revisions, and clarifications in the project knowledge layer. Maintained in append-only mode for agent and human traceability.\n\n"
-            f"{entry_text}\n",
-            encoding="utf-8",
-        )
-        return
-
-    existing = read_file(log_path).rstrip()
-    if not existing:
-        existing = (
-            "# Wiki Log\n\n"
-            "> Records important additions, revisions, and clarifications in the project knowledge layer. Maintained in append-only mode for agent and human traceability."
-        )
-    log_path.write_text(existing + "\n\n" + entry_text + "\n", encoding="utf-8")
 
 
 def build_graph(infer: bool = True, open_browser: bool = False, clean: bool = False,
