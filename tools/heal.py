@@ -11,6 +11,7 @@ Usage:
 """
 
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -28,6 +29,20 @@ from tools.lint import find_missing_entities, all_wiki_pages
 REPO_ROOT = Path(__file__).parent.parent
 WIKI_DIR = REPO_ROOT / "wiki"
 ENTITIES_DIR = WIKI_DIR / "entities"
+
+
+def sanitize_filename(name: str) -> str:
+    """Strip characters that are unsafe in filenames.
+
+    Removes path separators, null bytes, and leading dots to prevent
+    directory traversal when using LLM-derived entity names as filenames.
+    """
+    name = re.sub(r"[/\\:\0]", "", name)
+    name = name.lstrip(".")
+    name = "_".join(name.split())
+    if not name:
+        raise ValueError(f"Entity name is empty after sanitization: {name!r}")
+    return name
 
 def call_llm(prompt: str, max_tokens: int = 1500) -> str:
     # Use litellm standard environment variables
@@ -90,7 +105,12 @@ Write a comprehensive paragraph defining what `{entity}` means in the context of
 """
         try:
             result = call_llm(prompt)
-            out_path = ENTITIES_DIR / f"{entity}.md"
+            safe_name = sanitize_filename(entity)
+            out_path = ENTITIES_DIR / f"{safe_name}.md"
+            # Safety: ensure resolved path stays within entities directory
+            if not str(out_path.resolve()).startswith(str(ENTITIES_DIR.resolve())):
+                print(f" [!] Skipping unsafe path for entity: {entity}")
+                continue
             out_path.write_text(result, encoding="utf-8")
             print(f" -> Saved to {out_path.relative_to(REPO_ROOT)}")
         except Exception as e:
