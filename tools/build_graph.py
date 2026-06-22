@@ -22,7 +22,6 @@ Edge types:
 import re
 import sys
 import json
-import hashlib
 import argparse
 import statistics
 import webbrowser

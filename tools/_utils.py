@@ -130,5 +130,12 @@ def append_log(entry: str):
         )
         return
 
-    existing = read_file(LOG_FILE)
-    LOG_FILE.write_text(entry_text + "\n\n" + existing, encoding="utf-8")
+    existing = read_file(LOG_FILE).rstrip()
+    if not existing:
+        existing = (
+            "# Wiki Log\n\n"
+            "> Records important additions, revisions, and clarifications in the "
+            "project knowledge layer. Maintained in append-only mode for agent and "
+            "human traceability."
+        )
+    LOG_FILE.write_text(existing + "\n\n" + entry_text + "\n", encoding="utf-8")

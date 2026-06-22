@@ -330,14 +330,12 @@ if __name__ == "__main__":
         else:
             print("No broken wikilinks found.")
         print()
-        pages = all_wiki_pages()
-        page_stems = {p.stem.lower() for p in pages}
         index_content = read_file(INDEX_FILE).lower()
         unindexed_all = []
         for p in WIKI_DIR.rglob("*.md"):
             if p.name in ("index.md", "log.md", "lint-report.md", "overview.md"):
                 continue
-            if p.stem.lower() not in page_stems and p.stem.lower() not in index_content:
+            if p.stem.lower() not in index_content:
                 unindexed_all.append(str(p.relative_to(WIKI_DIR)))
         if unindexed_all:
             print(f"Pages not in index.md: {len(unindexed_all)}")

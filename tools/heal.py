@@ -86,7 +86,7 @@ sources: {[s.name for s in sources]}
 Write a comprehensive paragraph defining what `{entity}` means in the context of this wiki, its main significance, and any actions or associations related to it.
 """
         try:
-            result = call_llm(prompt, default_model="claude-3-5-haiku-latest")
+            result = call_llm(prompt, default_model="claude-3-5-haiku-latest", max_tokens=1500)
             safe_name = sanitize_filename(entity)
             out_path = ENTITIES_DIR / f"{safe_name}.md"
             # Safety: ensure resolved path stays within entities directory
