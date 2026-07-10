@@ -1,0 +1,35 @@
+name: Update Star History Chart
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Daily at 08:00 UTC
+  workflow_dispatch:       # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update-star-history:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate star history chart
+        uses: star-history/star-history-embed-image@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          repos: SamurAIGPT/llm-wiki-agent
+          type: Date
+
+      - name: Commit chart
+        run: |
+          if [ -f star-history-SamurAIGPT-llm-wiki-agent.svg ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add star-history-SamurAIGPT-llm-wiki-agent.svg
+            git diff --cached --quiet || git commit -m "chore: update star history chart"
+            git push
+          else
+            echo "No chart generated, skipping commit"
+          fi
