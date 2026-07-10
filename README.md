@@ -305,7 +305,7 @@ NetworkX + Louvain + Claude + vis.js. No server, no database, runs entirely loca
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=SamurAIGPT/llm-wiki-agent&type=Date)](https://star-history.com/#SamurAIGPT/llm-wiki-agent&Date)
+[![Stars](https://img.shields.io/github/stars/SamurAIGPT/llm-wiki-agent?style=social)](https://github.com/SamurAIGPT/llm-wiki-agent/stargazers)
 
 ## License
 
