@@ -23,6 +23,18 @@ jobs:
         with:
           output: assets/star-history.svg
 
+      - name: Thin x-axis labels (keep every other month)
+        run: |
+          python3 << 'PYEOF'
+          import re
+          svg = open("assets/star-history.svg").read()
+          labels = list(re.finditer(r'<text [^>]*y="394\.0"[^>]*>.*?</text>\n?', svg))
+          # remove odd-indexed labels (keep 1st, 3rd, 5th ...)
+          for m in reversed(labels[1::2]):
+              svg = svg[:m.start()] + svg[m.end():]
+          open("assets/star-history.svg", "w").write(svg)
+          PYEOF
+
       - name: Commit if changed
         run: |
           git config user.name  "github-actions[bot]"
