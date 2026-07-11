@@ -15,10 +15,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Ensure assets directory exists
+        run: mkdir -p assets
+
       - name: Render star-history chart
         uses: xingkongliang/star-history-svg@v1
         with:
           output: assets/star-history.svg
+
+      - name: Thin x-axis labels (yearly only)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 << 'PYEOF'
+          import re, json, subprocess
+          svg = open("assets/star-history.svg").read()
+          labels = list(re.finditer(r'<text ([^>]*)>(.*?)</text>\n?', svg))
+          non_year = {"January","February","March","April","May","June",
+                      "July","August","September","October","November","December"}
+          # Remove all non-January month labels
+          for m in reversed(labels):
+              if m.group(2) in non_year and m.group(2) != "January":
+                  svg = svg[:m.start()] + svg[m.end():]
+          # Get repo creation year for correct year labels
+          r = subprocess.check_output(
+              ["gh", "api", "repos/SamurAIGPT/llm-wiki-agent", "--jq", ".created_at"],
+              text=True).strip()
+          first_jan = int(r[:4]) + 1  # first January is the year after creation
+          year = first_jan
+          while ">January<" in svg:
+              svg = svg.replace(">January<", f">{year}<", 1)
+              year += 1
+          open("assets/star-history.svg", "w").write(svg)
+          PYEOF
 
       - name: Commit if changed
         run: |
