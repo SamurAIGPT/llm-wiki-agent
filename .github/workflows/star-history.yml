@@ -1,35 +1,29 @@
-name: Update Star History Chart
+# Regenerates assets/star-history.svg weekly and commits it when it changes.
+name: Refresh Star History
 
 on:
   schedule:
-    - cron: '0 8 * * *'  # Daily at 08:00 UTC
-  workflow_dispatch:       # Allow manual trigger
+    - cron: '17 3 * * 1'   # every Monday 03:17 UTC
+  workflow_dispatch:        # allow manual runs
 
 permissions:
-  contents: write
+  contents: write           # needed to commit the refreshed chart
 
 jobs:
-  update-star-history:
+  refresh:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate star history chart
-        uses: star-history/star-history-embed-image@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Render star-history chart
+        uses: xingkongliang/star-history-svg@v1
         with:
-          repos: SamurAIGPT/llm-wiki-agent
-          type: Date
+          output: assets/star-history.svg
 
-      - name: Commit chart
+      - name: Commit if changed
         run: |
-          if [ -f star-history-SamurAIGPT-llm-wiki-agent.svg ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add star-history-SamurAIGPT-llm-wiki-agent.svg
-            git diff --cached --quiet || git commit -m "chore: update star history chart"
-            git push
-          else
-            echo "No chart generated, skipping commit"
-          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/star-history.svg
+          git diff --cached --quiet || git commit -m "chore: refresh star history"
+          git push
