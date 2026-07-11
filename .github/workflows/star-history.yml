@@ -15,6 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Ensure assets directory exists
+        run: mkdir -p assets
+
       - name: Render star-history chart
         uses: xingkongliang/star-history-svg@v1
         with:
