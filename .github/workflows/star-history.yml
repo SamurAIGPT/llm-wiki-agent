@@ -22,6 +22,7 @@ jobs:
         uses: xingkongliang/star-history-svg@v1
         with:
           output: assets/star-history.svg
+          token: ${{ secrets.STAR_HISTORY_TOKEN }}
 
       - name: Thin x-axis labels (yearly only)
         env:
