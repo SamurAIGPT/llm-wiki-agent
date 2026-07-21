@@ -164,7 +164,9 @@ last_updated: {today}
         entry = f"- [{question[:60]}]({save_path}) — synthesis"
         if "## Syntheses" in index_content:
             index_content = index_content.replace("## Syntheses\n", f"## Syntheses\n{entry}\n")
-            INDEX_FILE.write_text(index_content, encoding="utf-8")
+        else:
+            index_content += f"\n\n## Syntheses\n{entry}\n"
+        INDEX_FILE.write_text(index_content, encoding="utf-8")
         print(f"  indexed: {save_path}")
 
     # Append to log

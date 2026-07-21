@@ -40,11 +40,13 @@ STUB_THRESHOLD_CHARS = 100
 
 def strip_frontmatter(content: str) -> str:
     """Remove YAML frontmatter (--- ... ---) from content."""
-    if content.startswith("---"):
-        end = content.find("---", 3)
+    # Strip UTF-8 BOM and leading whitespace before checking for frontmatter
+    cleaned = content.lstrip("\ufeff").lstrip()
+    if cleaned.startswith("---"):
+        end = cleaned.find("---", 3)
         if end != -1:
-            return content[end + 3:].strip()
-    return content.strip()
+            return cleaned[end + 3:].strip()
+    return cleaned.strip()
 
 
 # ── Check: Empty / Stub files ───────────────────────────────────────
