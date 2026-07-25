@@ -13,6 +13,16 @@ import re
 import sys
 from pathlib import Path
 
+ATLAS_CLOUD_BASE_URL = "https://api.atlascloud.ai/v1"
+ATLAS_CLOUD_DEFAULT_MODEL = "qwen/qwen3.5-flash"
+_ATLAS_CLOUD_MODEL_PREFIXES = ("atlascloud", "atlas-cloud", "atlas")
+_ATLAS_CLOUD_KEY_ENVS = ("ATLASCLOUD_API_KEY", "ATLAS_CLOUD_API_KEY")
+_ATLAS_CLOUD_BASE_URL_ENVS = (
+    "ATLASCLOUD_BASE_URL",
+    "ATLAS_CLOUD_BASE_URL",
+    "ATLAS_BASE_URL",
+)
+
 # ── Paths ──────────────────────────────────────────────────────────────
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -26,6 +36,45 @@ SCHEMA_FILE = REPO_ROOT / "CLAUDE.md"
 
 # Default metadata files to exclude from wiki page listings.
 _META_EXCLUDE = {"index.md", "log.md", "lint-report.md"}
+
+
+def _first_env(names: tuple[str, ...]) -> str | None:
+    for name in names:
+        value = os.getenv(name)
+        if value:
+            return value
+    return None
+
+
+def _split_atlas_cloud_model(model: str) -> str | None:
+    normalized = model.strip()
+    lower = normalized.lower()
+    for prefix in _ATLAS_CLOUD_MODEL_PREFIXES:
+        if lower == prefix:
+            return ATLAS_CLOUD_DEFAULT_MODEL
+        for separator in (":", "/"):
+            marker = prefix + separator
+            if lower.startswith(marker):
+                atlas_model = normalized[len(marker):].strip()
+                return atlas_model or ATLAS_CLOUD_DEFAULT_MODEL
+    return None
+
+
+def _llm_completion_kwargs(model: str) -> dict:
+    atlas_model = _split_atlas_cloud_model(model)
+    if not atlas_model:
+        return {"model": model}
+
+    kwargs = {
+        "model": f"openai/{atlas_model}",
+        "api_base": (
+            _first_env(_ATLAS_CLOUD_BASE_URL_ENVS) or ATLAS_CLOUD_BASE_URL
+        ).rstrip("/"),
+    }
+    api_key = _first_env(_ATLAS_CLOUD_KEY_ENVS)
+    if api_key:
+        kwargs["api_key"] = api_key
+    return kwargs
 
 
 # ── File I/O ───────────────────────────────────────────────────────────
@@ -67,9 +116,9 @@ def call_llm(
     model = os.getenv(model_env, default_model)
 
     kwargs: dict = {
-        "model": model,
         "messages": [{"role": "user", "content": prompt}],
     }
+    kwargs.update(_llm_completion_kwargs(model))
     if max_tokens:
         kwargs["max_tokens"] = max_tokens
 
