@@ -162,8 +162,11 @@ last_updated: {today}
         # Update index
         index_content = read_file(INDEX_FILE)
         entry = f"- [{question[:60]}]({save_path}) — synthesis"
-        if "## Syntheses" in index_content:
-            index_content = index_content.replace("## Syntheses\n", f"## Syntheses\n{entry}\n")
+        # Match the Syntheses header with or without a trailing newline (e.g. when
+        # the section sits at the very end of index.md with no final newline).
+        syntheses_pattern = re.compile(r"^## Syntheses[^\n]*(?:\n|$)", re.MULTILINE)
+        if syntheses_pattern.search(index_content):
+            index_content = syntheses_pattern.sub(f"## Syntheses\n{entry}\n", index_content, count=1)
         else:
             index_content += f"\n\n## Syntheses\n{entry}\n"
         INDEX_FILE.write_text(index_content, encoding="utf-8")
