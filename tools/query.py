@@ -166,7 +166,7 @@ last_updated: {today}
         # the section sits at the very end of index.md with no final newline).
         syntheses_pattern = re.compile(r"^## Syntheses[^\n]*(?:\n|$)", re.MULTILINE)
         if syntheses_pattern.search(index_content):
-            index_content = syntheses_pattern.sub(f"## Syntheses\n{entry}\n", index_content, count=1)
+            index_content = syntheses_pattern.sub(lambda m: f"## Syntheses\n{entry}\n", index_content, count=1)
         else:
             index_content += f"\n\n## Syntheses\n{entry}\n"
         INDEX_FILE.write_text(index_content, encoding="utf-8")
