@@ -7,8 +7,9 @@ The agent naturally supports processing Chinese content. With the CJK query bug 
 ## Files included in this showcase:
 
 - `raw/2026-04-13-reflection.md`: A sample source document (a personal reflection on career transition).
-- `wiki/sources/2026-04-13-reflection.md`: The parsed structured source page.
-- `wiki/entities/杨帆.md`: Auto-extracted Chinese entity page.
-- `wiki/concepts/AI转型.md`: Auto-extracted Chinese concept page.
 
-Try running `python tools/query.py "关于AI转型的建议"` from the root directory after moving these to your main knowledge base to see how semantic extraction and keyword matching behave in non-English contexts!
+Only the source document is included; the wiki pages derived from it are not.
+
+Try running `python tools/query.py "关于AI转型的建议"` from the root directory after
+ingesting this source into your main knowledge base to see how semantic extraction
+and keyword matching behave in non-English contexts.
