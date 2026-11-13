@@ -141,12 +141,25 @@ def validate_ingest(changed_pages: list[str] | None = None) -> dict:
     return {"broken_links": broken_links, "unindexed": unindexed}
 
 
-def convert_to_md(source: Path) -> Path:
+def _report_conversion_collision(output: Path) -> None:
+    print(
+        f"  Skipping conversion: '{output.name}' already exists; "
+        "leaving it unchanged."
+    )
+
+
+def convert_to_md(source: Path) -> Path | None:
     """Convert a non-markdown file to .md using markitdown.
 
     Returns the path to the converted .md file (placed next to the original
     with a .md extension, or in a temp location if the source dir is read-only).
+    Returns None when the destination already exists.
     """
+    output = source.with_suffix(".md")
+    if output.exists():
+        _report_conversion_collision(output)
+        return None
+
     try:
         from markitdown import MarkItDown
     except ImportError:
@@ -161,10 +174,14 @@ def convert_to_md(source: Path) -> Path:
         print(f"Error: failed to convert '{source.name}': {e}")
         sys.exit(1)
 
-    # Write converted output next to source as <name>.md
-    output = source.with_suffix(".md")
+    # Create the sibling exclusively so a destination created after the check
+    # above is not overwritten either.
     try:
-        output.write_text(result.text_content, encoding="utf-8")
+        with output.open("x", encoding="utf-8") as converted_file:
+            converted_file.write(result.text_content)
+    except FileExistsError:
+        _report_conversion_collision(output)
+        return None
     except OSError:
         # Fallback: source directory may be read-only
         tmp = Path(tempfile.mkdtemp()) / f"{source.stem}.md"
@@ -182,7 +199,6 @@ def ingest(source_path: str, auto_convert: bool = True):
         sys.exit(1)
 
     # Auto-convert non-markdown files
-    converted_path = None
     if source.suffix.lower() != ".md":
         if not auto_convert:
             print(f"  Skipping non-.md file (--no-convert): {source.name}")
@@ -193,6 +209,8 @@ def ingest(source_path: str, auto_convert: bool = True):
             return
         print(f"  Converting {source.name} to markdown...")
         converted_path = convert_to_md(source)
+        if converted_path is None:
+            return
         source = converted_path
 
     source_content = source.read_text(encoding="utf-8")
