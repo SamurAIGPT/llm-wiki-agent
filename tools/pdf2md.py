@@ -81,7 +81,7 @@ def convert_arxiv(arxiv_id: str, output: Path) -> Path:
         print(f"Error: arxiv2md failed:\n{result.stderr}")
         sys.exit(1)
 
-    print(f"  ✓ Converted arXiv {arxiv_id} → {output.relative_to(REPO_ROOT)}")
+    print(f"  ✓ Converted arXiv {arxiv_id} → {display_output_path(output)}")
     return output
 
 
@@ -116,7 +116,7 @@ def convert_marker(pdf_path: Path, output: Path) -> Path:
     import shutil
     shutil.rmtree(tmp_dir, ignore_errors=True)
 
-    print(f"  ✓ Converted {pdf_path.name} → {output.relative_to(REPO_ROOT)}")
+    print(f"  ✓ Converted {pdf_path.name} → {display_output_path(output)}")
     return output
 
 
@@ -135,7 +135,7 @@ def convert_pymupdf(pdf_path: Path, output: Path) -> Path:
     md_text = pymupdf4llm.to_markdown(str(pdf_path))
     output.write_text(md_text, encoding="utf-8")
 
-    print(f"  ✓ Converted {pdf_path.name} → {output.relative_to(REPO_ROOT)}")
+    print(f"  ✓ Converted {pdf_path.name} → {display_output_path(output)}")
     return output
 
 
@@ -169,6 +169,14 @@ def resolve_output(source: str, arxiv_id: str | None, output_arg: str | None) ->
     return DEFAULT_OUTPUT_DIR / f"{slug}.md"
 
 
+def display_output_path(output: Path) -> str:
+    """Display checkout paths relatively and external paths absolutely."""
+    try:
+        return str(output.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(output)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Convert PDF/arXiv to Markdown for raw/",
@@ -191,7 +199,7 @@ def main():
 
     print(f"\npdf2md — LLM Wiki Agent")
     print(f"  Input:   {args.input}")
-    print(f"  Output:  {output.relative_to(REPO_ROOT)}")
+    print(f"  Output:  {display_output_path(output)}")
 
     # ── Auto-select backend ──
     if backend == "auto":
@@ -226,8 +234,8 @@ def main():
         BACKENDS[backend](pdf_path, output)
 
     print(f"\nDone. Now ingest with:")
-    print(f"  python tools/ingest.py {output.relative_to(REPO_ROOT)}")
-    print(f"  — or in your agent: ingest {output.relative_to(REPO_ROOT)}")
+    print(f"  python tools/ingest.py {display_output_path(output)}")
+    print(f"  — or run ingest directly: ingest {display_output_path(output)}")
 
 
 if __name__ == "__main__":
