@@ -6,15 +6,15 @@ Usage:
     python tools/pdf2md.py <input> [--output raw/papers/output.md] [--backend auto]
 
 Inputs:
-    arXiv ID      →  2401.12345
-    arXiv URL     →  https://arxiv.org/abs/2401.12345
-    Local PDF     →  /path/to/paper.pdf
+    arXiv ID      -> 2401.12345
+    arXiv URL     -> https://arxiv.org/abs/2401.12345
+    Local PDF     -> /path/to/paper.pdf
 
 Backends:
-    auto          →  arXiv inputs use arxiv2md; PDFs use marker (fallback: pymupdf4llm)
-    arxiv2md      →  Best for arXiv papers (uses structured source, not PDF)
-    marker        →  Best for complex multi-column academic PDFs
-    pymupdf4llm   →  Fast, lightweight, no GPU — good for native-text PDFs
+    auto          -> arXiv inputs use arxiv2md; PDFs use marker (fallback: pymupdf4llm)
+    arxiv2md      -> Best for arXiv papers (uses structured source, not PDF)
+    marker        -> Best for complex multi-column academic PDFs
+    pymupdf4llm   -> Fast, lightweight, no GPU - good for native-text PDFs
 
 Examples:
     python tools/pdf2md.py 2401.12345
