@@ -29,6 +29,7 @@ import json
 import argparse
 from pathlib import Path
 from datetime import date
+from urllib.parse import unquote
 
 # Bootstrap shared utilities
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -74,9 +75,9 @@ def _parse_index_links(index_content: str) -> set[str]:
     """Extract markdown link targets from index.md.
 
     Matches patterns like: [Title](sources/slug.md)
-    Returns set of relative paths (e.g. 'sources/slug.md').
+    Returns set of decoded relative paths (e.g. 'sources/slug.md').
     """
-    return set(re.findall(r'\[.*?\]\(([^)]+\.md)\)', index_content))
+    return {unquote(link) for link in re.findall(r'\[.*?\]\(([^)]+\.md)\)', index_content)}
 
 
 def check_index_sync(pages: list[Path]) -> dict:
